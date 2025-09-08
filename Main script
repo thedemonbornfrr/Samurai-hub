@@ -1,4 +1,4 @@
--- Samurai Hub - MM2 + 99 Nights Support with Enhanced Features (COMPLETE REWRITE)
+-- Samurai Hub - MM2 + 99 Nights Support with Enhanced Features (FINAL COMPLETE REWRITE)
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -38,12 +38,12 @@ currentGame = detectGame()
 -- Device Detection
 local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 
--- Key System Configuration
+-- Key System Configuration (UPDATED WITH FOREST KEY)
 local function getKeyForGame(gameType)
     local keys = {
         MM2 = "Upd13",
-        ["99NIGHTS"] = "99NITF",
-        ["99NIGHTS_LOBBY"] = "99NITF"
+        ["99NIGHTS"] = "forest",
+        ["99NIGHTS_LOBBY"] = "forest"
     }
     return keys[gameType] or "INVALID"
 end
@@ -64,7 +64,7 @@ local function saveKey()
     end
 end
 
--- Create 99 Nights Lobby Screen
+-- Create 99 Nights Lobby Screen (UPDATED TEXT)
 local function create99NightsLobbyScreen()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "NightsLobbyScreen"
@@ -103,7 +103,7 @@ local function create99NightsLobbyScreen()
     title.Size = UDim2.new(1, -40, 0, 60)
     title.Position = UDim2.new(0, 20, 0, 20)
     title.BackgroundTransparency = 1
-    title.Text = "Go into a game first"
+    title.Text = "Join the game first"
     title.TextColor3 = Color3.fromRGB(255, 100, 100)
     title.TextSize = isMobile and 28 or 32
     title.Font = Enum.Font.GothamBold
@@ -244,7 +244,7 @@ local function createUnsupportedGameScreen()
     end)
     
     nightsBtn.MouseButton1Click:Connect(function()
-        TeleportService:Teleport(NIGHTS_99_LOBBY_ID, player) -- Updated to use lobby ID
+        TeleportService:Teleport(NIGHTS_99_LOBBY_ID, player)
     end)
     
     return screenGui, blurEffect
@@ -535,21 +535,89 @@ local function stopAimbot()
     end
 end
 
--- 99 Nights Specific Functions (ENHANCED WITH WORKING HITBOX SYSTEM)
+-- 99 Nights Specific Functions (ENHANCED WITH DYNAMIC DROPDOWNS)
 local selectedCreature = "Bear"
+local selectedItem = ""
 local hitboxSize = 70
 local hitboxVisualization = nil
-local originalHitboxSizes = {} -- Store original sizes
-local modifiedCreatures = {} -- Track modified creatures
+local originalHitboxSizes = {}
+local modifiedCreatures = {}
 
--- All creatures from the wiki images
+-- All creatures from the wiki images (ADDED BUNNY)
 local creatureNames = {
     "Arctic Fox", "Mammoth", "The Owl", "Polar Bear", "The Deer",
     "Alien", "Alien Elite", "Cultist", "Crossbow Cultist", 
-    "Juggernaut Cultist", "Wolf", "Alpha Wolf", "Bear"
+    "Juggernaut Cultist", "Wolf", "Alpha Wolf", "Bear", "Bunny"
 }
 
--- Advanced creature finding with multiple search patterns
+-- Dynamic creature scanning
+local function scanWorkspaceForCreatures()
+    local foundCreatures = {}
+    
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") and obj:FindFirstChildOfClass("Humanoid") then
+            local objName = obj.Name
+            local found = false
+            
+            -- Check against known creatures
+            for _, knownCreature in pairs(creatureNames) do
+                if objName:lower():find(knownCreature:lower()) or 
+                   objName:lower():find(knownCreature:lower():gsub("the ", "")) or
+                   objName:lower():find(knownCreature:lower():gsub(" ", "")) then
+                    found = true
+                    break
+                end
+            end
+            
+            if found and not foundCreatures[objName] then
+                foundCreatures[objName] = true
+            end
+        end
+    end
+    
+    local result = {}
+    for name, _ in pairs(foundCreatures) do
+        table.insert(result, name)
+    end
+    
+    table.sort(result)
+    return result
+end
+
+-- Dynamic item scanning
+local function scanWorkspaceForItems()
+    local foundItems = {}
+    local itemTypes = {
+        "wood", "log", "stone", "rock", "coin", "gem", "crystal", 
+        "berry", "fruit", "meat", "bone", "stick", "branch",
+        "mushroom", "herb", "flower", "seed", "nut"
+    }
+    
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("Part") or obj:IsA("Model") then
+            local objName = obj.Name:lower()
+            
+            for _, itemType in pairs(itemTypes) do
+                if objName:find(itemType) then
+                    if not foundItems[obj.Name] then
+                        foundItems[obj.Name] = true
+                    end
+                    break
+                end
+            end
+        end
+    end
+    
+    local result = {}
+    for name, _ in pairs(foundItems) do
+        table.insert(result, name)
+    end
+    
+    table.sort(result)
+    return result
+end
+
+-- Advanced creature finding
 local function findCreaturesInWorkspace(creatureName)
     local foundCreatures = {}
     local searchPatterns = {
@@ -574,33 +642,26 @@ local function findCreaturesInWorkspace(creatureName)
     return foundCreatures
 end
 
--- WORKING hitbox modification system
+-- Working hitbox modification system
 local function modifyCreatureHitbox(creatureName, newSize)
     local creatures = findCreaturesInWorkspace(creatureName)
     local modifiedCount = 0
     
     for _, creature in pairs(creatures) do
         if creature and creature.Parent then
-            -- Store original size if not stored yet
             if not originalHitboxSizes[creature] then
                 originalHitboxSizes[creature] = {}
             end
             
-            -- Modify all BaseParts in the creature
             for _, part in pairs(creature:GetDescendants()) do
                 if part:IsA("BasePart") then
-                    -- Store original size
                     if not originalHitboxSizes[creature][part] then
                         originalHitboxSizes[creature][part] = part.Size
                     end
                     
-                    -- Calculate scale factor
-                    local scaleFactor = newSize / 70 -- 70 is default
-                    
-                    -- Apply new size
+                    local scaleFactor = newSize / 70
                     part.Size = originalHitboxSizes[creature][part] * scaleFactor
                     
-                    -- Ensure collision is enabled for hitbox
                     if part.Name:find("HumanoidRootPart") or part.Name:find("Torso") then
                         part.CanCollide = true
                     end
@@ -621,7 +682,7 @@ local function modifyCreatureHitbox(creatureName, newSize)
     end
 end
 
--- Reset all creature hitboxes to original size
+-- Reset all creature hitboxes
 local function resetAllHitboxes()
     for creature, parts in pairs(originalHitboxSizes) do
         if creature and creature.Parent then
@@ -689,85 +750,113 @@ local function createHitboxVisualization(creatureName, size)
     print("Hitbox visualization created for " .. creatureName .. " with size " .. size)
 end
 
--- Tree spawning and wood collection system
-local function spawnTreesAndCollectWood()
+-- Item spawning system
+local function spawnSelectedItem(itemName)
     if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
         print("Character not found!")
         return
     end
     
-    local playerPos = player.Character.HumanoidRootPart.Position
-    local treeCount = 12
-    local spawnRadius = 60
-    
-    print("Spawning " .. treeCount .. " pre-cut trees...")
-    
-    for i = 1, treeCount do
-        local angle = (i / treeCount) * math.pi * 2
-        local distance = math.random(15, spawnRadius)
-        local spawnPos = playerPos + Vector3.new(
-            math.cos(angle) * distance,
-            0,
-            math.sin(angle) * distance
-        )
-        
-        -- Create tree stump
-        local stump = Instance.new("Part")
-        stump.Name = "CutTreeStump"
-        stump.Size = Vector3.new(6, 8, 6)
-        stump.Position = spawnPos
-        stump.Anchored = true
-        stump.Material = Enum.Material.Wood
-        stump.BrickColor = BrickColor.new("Brown")
-        stump.Shape = Enum.PartType.Cylinder
-        stump.Parent = workspace
-        
-        -- Create wood logs scattered around stump
-        for j = 1, math.random(4, 8) do
-            local log = Instance.new("Part")
-            log.Name = "WoodLog"
-            log.Size = Vector3.new(3, 3, 12)
-            log.Position = spawnPos + Vector3.new(
-                math.random(-12, 12),
-                2,
-                math.random(-12, 12)
-            )
-            log.Material = Enum.Material.Wood
-            log.BrickColor = BrickColor.new("Reddish brown")
-            log.Shape = Enum.PartType.Cylinder
-            log.Rotation = Vector3.new(math.random(-45, 45), math.random(0, 360), math.random(-45, 45))
-            log.Parent = workspace
-            
-            -- Make logs collectible
-            local clickDetector = Instance.new("ClickDetector")
-            clickDetector.MaxActivationDistance = 50
-            clickDetector.Parent = log
-            
-            clickDetector.MouseClick:Connect(function()
-                log:Destroy()
-                print("Wood log collected!")
-            end)
+    -- Find reference item in workspace
+    local referenceItem = nil
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj.Name == itemName and (obj:IsA("Part") or obj:IsA("Model")) then
+            referenceItem = obj
+            break
         end
     end
     
-    -- Auto-collect all wood after a short delay
+    if not referenceItem then
+        print("No reference " .. itemName .. " found in workspace!")
+        return
+    end
+    
+    local playerPos = player.Character.HumanoidRootPart.Position
+    local spawnCount = math.random(8, 15)
+    
+    print("Spawning " .. spawnCount .. " " .. itemName .. "(s)...")
+    
+    for i = 1, spawnCount do
+        local angle = (i / spawnCount) * math.pi * 2
+        local distance = math.random(10, 30)
+        local spawnPos = playerPos + Vector3.new(
+            math.cos(angle) * distance,
+            math.random(2, 8),
+            math.sin(angle) * distance
+        )
+        
+        local newItem
+        if referenceItem:IsA("Part") then
+            newItem = referenceItem:Clone()
+            newItem.Position = spawnPos
+            newItem.Parent = workspace
+        elseif referenceItem:IsA("Model") then
+            newItem = referenceItem:Clone()
+            if newItem:FindFirstChild("HumanoidRootPart") then
+                newItem.HumanoidRootPart.Position = spawnPos
+            elseif newItem:FindFirstChildOfClass("BasePart") then
+                newItem:FindFirstChildOfClass("BasePart").Position = spawnPos
+            end
+            newItem.Parent = workspace
+        end
+        
+        if newItem then
+            -- Add collection functionality
+            task.spawn(function()
+                local function collectItem()
+                    if newItem and newItem.Parent then
+                        newItem.Position = playerPos + Vector3.new(0, i * 0.5, 0)
+                        task.wait(1)
+                        if newItem and newItem.Parent then
+                            newItem:Destroy()
+                            print("Collected " .. itemName .. "!")
+                        end
+                    end
+                end
+                
+                if newItem:IsA("Part") then
+                    local detector = Instance.new("ClickDetector")
+                    detector.MaxActivationDistance = 50
+                    detector.Parent = newItem
+                    detector.MouseClick:Connect(collectItem)
+                elseif newItem:IsA("Model") then
+                    local mainPart = newItem:FindFirstChildOfClass("BasePart")
+                    if mainPart then
+                        local detector = Instance.new("ClickDetector")
+                        detector.MaxActivationDistance = 50
+                        detector.Parent = mainPart
+                        detector.MouseClick:Connect(collectItem)
+                    end
+                end
+            end)
+        end
+        
+        task.wait(0.1)
+    end
+    
+    -- Auto-collect all spawned items after delay
     task.wait(2)
-    print("Auto-collecting all wood logs...")
+    print("Auto-collecting all " .. itemName .. "s...")
     
     for _, obj in pairs(workspace:GetChildren()) do
-        if obj.Name == "WoodLog" and obj:IsA("Part") then
-            -- Teleport wood to player
-            obj.Position = playerPos + Vector3.new(
-                math.random(-5, 5),
-                math.random(5, 10),
-                math.random(-5, 5)
-            )
+        if obj.Name == itemName and (obj:IsA("Part") or obj:IsA("Model")) then
+            if obj:IsA("Part") then
+                obj.Position = playerPos + Vector3.new(
+                    math.random(-5, 5),
+                    math.random(3, 8),
+                    math.random(-5, 5)
+                )
+            elseif obj:IsA("Model") and obj:FindFirstChildOfClass("BasePart") then
+                obj:FindFirstChildOfClass("BasePart").Position = playerPos + Vector3.new(
+                    math.random(-5, 5),
+                    math.random(3, 8),
+                    math.random(-5, 5)
+                )
+            end
             
             task.wait(0.1)
-            
-            -- Destroy after teleporting
             task.spawn(function()
-                task.wait(1)
+                task.wait(1.5)
                 if obj and obj.Parent then
                     obj:Destroy()
                 end
@@ -775,7 +864,7 @@ local function spawnTreesAndCollectWood()
         end
     end
     
-    print("All wood collected!")
+    print("All " .. itemName .. "s collected!")
 end
 
 -- Hub Creation Function
@@ -798,7 +887,7 @@ local function createHub()
     Window = WindUI:CreateWindow({
         Title = windowTitle,
         Icon = "rbxassetid://99224451763710",
-Author = windowAuthor,
+        Author = windowAuthor,
         Folder = "SamuraiHub",
         Size = isMobile and UDim2.fromOffset(500, 400) or UDim2.fromOffset(580, 325),
         Transparent = true,
@@ -1344,10 +1433,10 @@ Author = windowAuthor,
         })
         
     elseif currentGame == "99NIGHTS" then
-        -- 99 Nights Tabs (ENHANCED WITH NEW FEATURES)
+        -- 99 Nights Tabs (ENHANCED WITH DYNAMIC DROPDOWNS)
         tabs.CreditsTab = Window:Tab({Title = "Credits", Icon = "info"})
         tabs.CreaturesTab = Window:Tab({Title = "Creatures", Icon = "zap"})
-        tabs.WorldTab = Window:Tab({Title = "World Features", Icon = "globe"}) -- NEW TAB
+        tabs.WorldTab = Window:Tab({Title = "World Features", Icon = "globe"})
         
         -- 99 Nights Credits Tab
         tabs.CreditsTab:Section({Title = "Team Credits"})
@@ -1376,12 +1465,12 @@ Author = windowAuthor,
             Desc = "• Flaxan\n• Mark"
         })
         
-        -- Enhanced Creatures Tab with ALL entities
-        tabs.CreaturesTab:Section({Title = "Creature Hitbox System"})
+        -- Enhanced Creatures Tab with DYNAMIC DROPDOWNS
+        tabs.CreaturesTab:Section({Title = "Dynamic Creature System"})
         
         local creatureDropdown = tabs.CreaturesTab:Dropdown({
             Title = "Select Creature",
-            Values = creatureNames,
+            Values = scanWorkspaceForCreatures(),
             Multi = false,
             Default = 1,
             Callback = function(value)
@@ -1389,6 +1478,17 @@ Author = windowAuthor,
                 print("Selected creature: " .. selectedCreature)
             end
         })
+        
+        -- Auto-update creature dropdown every 5 seconds
+        task.spawn(function()
+            while task.wait(5) do
+                if creatureDropdown then
+                    local newCreatures = scanWorkspaceForCreatures()
+                    creatureDropdown:SetValues(newCreatures)
+                    print("Creature dropdown updated - Found: " .. table.concat(newCreatures, ", "))
+                end
+            end
+        end)
         
         -- Working hitbox slider
         tabs.CreaturesTab:Slider({
@@ -1425,14 +1525,15 @@ Author = windowAuthor,
             Title = "Modify ALL Creatures",
             Desc = "Apply hitbox size to all creatures in workspace",
             Callback = function()
+                local allCreatures = scanWorkspaceForCreatures()
                 local totalModified = 0
                 print("Modifying all creatures with size " .. hitboxSize .. "...")
                 
-                for _, creatureName in pairs(creatureNames) do
+                for _, creatureName in pairs(allCreatures) do
                     if modifyCreatureHitbox(creatureName, hitboxSize) then
                         totalModified = totalModified + 1
                     end
-                    task.wait(0.2) -- Prevent lag
+                    task.wait(0.2)
                 end
                 
                 print("Successfully modified " .. totalModified .. " creature types!")
@@ -1459,33 +1560,63 @@ Author = windowAuthor,
             end
         })
         
-        -- NEW World Features Tab
-        tabs.WorldTab:Section({Title = "Resource Collection"})
+        -- Enhanced World Features Tab with DYNAMIC ITEM DROPDOWN
+        tabs.WorldTab:Section({Title = "Dynamic Item Spawning"})
         
-        tabs.WorldTab:Button({
-            Title = "Spawn Trees & Collect Wood",
-            Desc = "Spawns pre-cut trees with auto wood collection",
-            Callback = function()
-                spawnTreesAndCollectWood()
+        local itemDropdown = tabs.WorldTab:Dropdown({
+            Title = "Select Item to Spawn",
+            Values = scanWorkspaceForItems(),
+            Multi = false,
+            Default = 1,
+            Callback = function(value)
+                selectedItem = value or ""
+                print("Selected item: " .. selectedItem)
             end
         })
         
-        tabs.WorldTab:Button({
-            Title = "Clear All Spawned Trees",
-            Desc = "Remove all spawned trees and logs",
-            Callback = function()
-                local removed = 0
-                for _, obj in pairs(workspace:GetChildren()) do
-                    if obj.Name == "CutTreeStump" or obj.Name == "WoodLog" then
-                        obj:Destroy()
-                        removed = removed + 1
-                    end
+        -- Auto-update item dropdown every 5 seconds
+        task.spawn(function()
+            while task.wait(5) do
+                if itemDropdown then
+                    local newItems = scanWorkspaceForItems()
+                    itemDropdown:SetValues(newItems)
+                    print("Item dropdown updated - Found: " .. table.concat(newItems, ", "))
                 end
-                print("Removed " .. removed .. " spawned objects!")
+            end
+        end)
+        
+        tabs.WorldTab:Button({
+            Title = "Spawn Selected Item",
+            Desc = "Spawns the selected item around player",
+            Callback = function()
+                if selectedItem ~= "" then
+                    spawnSelectedItem(selectedItem)
+                else
+                    print("Please select an item first!")
+                end
             end
         })
         
-        tabs.WorldTab:Section({Title = "Item Collection"})
+        tabs.WorldTab:Button({
+            Title = "Clear All Spawned Items",
+            Desc = "Remove all spawned items",
+            Callback = function()
+                if selectedItem ~= "" then
+                    local removed = 0
+                    for _, obj in pairs(workspace:GetChildren()) do
+                        if obj.Name == selectedItem then
+                            obj:Destroy()
+                            removed = removed + 1
+                        end
+                    end
+                    print("Removed " .. removed .. " spawned " .. selectedItem .. "(s)!")
+                else
+                    print("No item selected!")
+                end
+            end
+        })
+        
+        tabs.WorldTab:Section({Title = "General Collection"})
         
         tabs.WorldTab:Button({
             Title = "Collect All Items",
@@ -1503,7 +1634,8 @@ Author = windowAuthor,
                     if obj:IsA("Part") then
                         local name = obj.Name:lower()
                         if name:find("wood") or name:find("log") or name:find("item") or 
-                           name:find("coin") or name:find("gem") or name:find("crystal") then
+                           name:find("coin") or name:find("gem") or name:find("crystal") or
+                           name:find("berry") or name:find("meat") or name:find("bone") then
                             obj.Position = playerPos + Vector3.new(0, collected * 0.5, 0)
                             collected = collected + 1
                             
@@ -1521,34 +1653,17 @@ Author = windowAuthor,
             Desc = "List all creatures and items in workspace",
             Callback = function()
                 print("=== WORKSPACE SCAN ===")
-                local foundCreatures = {}
-                local foundItems = {}
+                local foundCreatures = scanWorkspaceForCreatures()
+                local foundItems = scanWorkspaceForItems()
                 
-                for _, obj in pairs(workspace:GetDescendants()) do
-                    if obj:IsA("Model") and obj:FindFirstChildOfClass("Humanoid") then
-                        if not foundCreatures[obj.Name] then
-                            foundCreatures[obj.Name] = 0
-                        end
-                        foundCreatures[obj.Name] = foundCreatures[obj.Name] + 1
-                    elseif obj:IsA("Part") then
-                        local name = obj.Name:lower()
-                        if name:find("item") or name:find("wood") or name:find("coin") then
-                            if not foundItems[obj.Name] then
-                                foundItems[obj.Name] = 0
-                            end
-                            foundItems[obj.Name] = foundItems[obj.Name] + 1
-                        end
-                    end
+                print("CREATURES FOUND (" .. #foundCreatures .. "):")
+                for _, name in pairs(foundCreatures) do
+                    print("- " .. name)
                 end
                 
-                print("CREATURES FOUND:")
-                for name, count in pairs(foundCreatures) do
-                    print("- " .. name .. " (" .. count .. ")")
-                end
-                
-                print("ITEMS FOUND:")
-                for name, count in pairs(foundItems) do
-                    print("- " .. name .. " (" .. count .. ")")
+                print("ITEMS FOUND (" .. #foundItems .. "):")
+                for _, name in pairs(foundItems) do
+                    print("- " .. name)
                 end
                 
                 print("=== SCAN COMPLETE ===")
@@ -1857,6 +1972,6 @@ print("All systems loaded and ready!")
 if currentGame == "MM2" then
     print("MM2 features available: ESP, Auto-Kill, Gun Teleport, Collection, Sheriff Aimbot, Random Features")
 elseif currentGame == "99NIGHTS" then
-    print("99 Nights features available: Working Hitbox Modification, Creature Tracking, Tree Spawning, Wood Collection")
+    print("99 Nights features available: Dynamic Hitbox System, Real-time Item Spawning, Auto-updating Dropdowns")
 end
-print("Samurai Hub Complete Edition - Enhanced with working hitbox system and world features!")
+print("Samurai Hub Complete Edition - Enhanced with dynamic dropdowns and real-time workspace scanning!")
