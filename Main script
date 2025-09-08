@@ -1,4 +1,4 @@
--- Samurai Hub - MM2 + 99 Nights Support with Enhanced Features (FINAL COMPLETE REWRITE)
+-- Lost Hub - MM2 + 99 Nights Support with Enhanced Features (FINAL COMPLETE REWRITE)
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -48,7 +48,7 @@ local function getKeyForGame(gameType)
     return keys[gameType] or "INVALID"
 end
 
-local SAVE_KEY = "SamuraiHub_SavedKey_" .. currentGame .. "_" .. player.UserId
+local SAVE_KEY = "LostHub_SavedKey_" .. currentGame .. "_" .. player.UserId
 local REQUIRED_KEY = getKeyForGame(currentGame)
 
 local function isKeySaved()
@@ -183,7 +183,7 @@ local function createUnsupportedGameScreen()
     message.Size = UDim2.new(1, -40, 0, 80)
     message.Position = UDim2.new(0, 20, 0, 90)
     message.BackgroundTransparency = 1
-    message.Text = "Sorry, this game isn't supported with Samurai Hub yet..."
+    message.Text = "Sorry, this game isn't supported with Lost Hub yet..."
     message.TextColor3 = Color3.fromRGB(255, 255, 255)
     message.TextSize = isMobile and 16 or 18
     message.Font = Enum.Font.Gotham
@@ -535,11 +535,11 @@ local function stopAimbot()
     end
 end
 
--- 99 Nights Specific Functions (ENHANCED WITH DYNAMIC DROPDOWNS)
+-- 99 Nights Specific Functions (ENHANCED WITH VISIBLE HITBOXES AND LOG SUPPORT)
 local selectedCreature = "Bear"
 local selectedItem = ""
 local hitboxSize = 70
-local hitboxVisualization = nil
+local hitboxVisualization = {}
 local originalHitboxSizes = {}
 local modifiedCreatures = {}
 
@@ -584,11 +584,11 @@ local function scanWorkspaceForCreatures()
     return result
 end
 
--- Dynamic item scanning
+-- Enhanced dynamic item scanning with log/logs support
 local function scanWorkspaceForItems()
     local foundItems = {}
     local itemTypes = {
-        "wood", "log", "stone", "rock", "coin", "gem", "crystal", 
+        "wood", "log", "logs", "stone", "rock", "coin", "gem", "crystal", 
         "berry", "fruit", "meat", "bone", "stick", "branch",
         "mushroom", "herb", "flower", "seed", "nut"
     }
@@ -642,7 +642,7 @@ local function findCreaturesInWorkspace(creatureName)
     return foundCreatures
 end
 
--- Working hitbox modification system
+-- Enhanced working hitbox modification system
 local function modifyCreatureHitbox(creatureName, newSize)
     local creatures = findCreaturesInWorkspace(creatureName)
     local modifiedCount = 0
@@ -699,11 +699,15 @@ local function resetAllHitboxes()
     print("All creature hitboxes reset to original sizes!")
 end
 
--- Enhanced hitbox visualization
+-- Enhanced hitbox visualization with clear red boxes
 local function createHitboxVisualization(creatureName, size)
-    if hitboxVisualization then
-        hitboxVisualization:Destroy()
+    -- Clear existing visualizations
+    for _, visual in pairs(hitboxVisualization) do
+        if visual and visual.Parent then
+            visual:Destroy()
+        end
     end
+    hitboxVisualization = {}
     
     local creatures = findCreaturesInWorkspace(creatureName)
     if #creatures == 0 then
@@ -711,63 +715,89 @@ local function createHitboxVisualization(creatureName, size)
         return
     end
     
-    local creature = creatures[1]
-    local rootPart = creature:FindFirstChild("HumanoidRootPart") or 
-                    creature:FindFirstChild("Torso") or
-                    creature:FindFirstChildOfClass("BasePart")
-    
-    if not rootPart then
-        print("No suitable part found for visualization!")
-        return
+    for i, creature in pairs(creatures) do
+        local rootPart = creature:FindFirstChild("HumanoidRootPart") or 
+                        creature:FindFirstChild("Torso") or
+                        creature:FindFirstChildOfClass("BasePart")
+        
+        if rootPart then
+            -- Create clear red box around creature
+            local visualPart = Instance.new("Part")
+            visualPart.Name = "HitboxVisualization_" .. i
+            visualPart.Size = Vector3.new(size, size, size)
+            visualPart.CFrame = rootPart.CFrame
+            visualPart.Anchored = true
+            visualPart.CanCollide = false
+            visualPart.Transparency = 0.7
+            visualPart.Material = Enum.Material.ForceField
+            visualPart.BrickColor = BrickColor.new("Bright red")
+            visualPart.Shape = Enum.PartType.Block
+            visualPart.Parent = workspace
+            
+            -- Add selection box for clear outline
+            local selectionBox = Instance.new("SelectionBox")
+            selectionBox.Adornee = visualPart
+            selectionBox.Color3 = Color3.fromRGB(255, 0, 0)
+            selectionBox.LineThickness = 0.2
+            selectionBox.Transparency = 0
+            selectionBox.Parent = visualPart
+            
+            table.insert(hitboxVisualization, visualPart)
+            
+            local connection
+            connection = RunService.Heartbeat:Connect(function()
+                if creature and creature.Parent and rootPart and rootPart.Parent then
+                    visualPart.CFrame = rootPart.CFrame
+                else
+                    connection:Disconnect()
+                    if visualPart and visualPart.Parent then
+                        visualPart:Destroy()
+                    end
+                    -- Remove from visualization table
+                    for j, vis in pairs(hitboxVisualization) do
+                        if vis == visualPart then
+                            table.remove(hitboxVisualization, j)
+                            break
+                        end
+                    end
+                end
+            end)
+        end
     end
     
-    local visualPart = Instance.new("Part")
-    visualPart.Name = "HitboxVisualization"
-    visualPart.Size = Vector3.new(size, size, size)
-    visualPart.CFrame = rootPart.CFrame
-    visualPart.Anchored = true
-    visualPart.CanCollide = false
-    visualPart.Transparency = 0.6
-    visualPart.Material = Enum.Material.ForceField
-    visualPart.BrickColor = BrickColor.new("Bright red")
-    visualPart.Shape = Enum.PartType.Ball
-    visualPart.Parent = workspace
-    
-    hitboxVisualization = visualPart
-    
-    local connection
-    connection = RunService.Heartbeat:Connect(function()
-        if creature and creature.Parent and rootPart and rootPart.Parent then
-            visualPart.CFrame = rootPart.CFrame
-        else
-            connection:Disconnect()
-            if visualPart and visualPart.Parent then
-                visualPart:Destroy()
-            end
-        end
-    end)
-    
-    print("Hitbox visualization created for " .. creatureName .. " with size " .. size)
+    print("Hitbox visualization created for " .. #hitboxVisualization .. " " .. creatureName .. "(s) with size " .. size)
 end
 
--- Item spawning system
+-- Enhanced item spawning system with better log/logs support
 local function spawnSelectedItem(itemName)
     if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
         print("Character not found!")
         return
     end
     
-    -- Find reference item in workspace
+    -- Find reference item in workspace (check both log and logs)
     local referenceItem = nil
-    for _, obj in pairs(workspace:GetDescendants()) do
-        if obj.Name == itemName and (obj:IsA("Part") or obj:IsA("Model")) then
-            referenceItem = obj
-            break
+    local searchNames = {itemName}
+    
+    -- Add variations for logs/log
+    if itemName:lower():find("log") then
+        table.insert(searchNames, itemName:gsub("logs", "log"))
+        table.insert(searchNames, itemName:gsub("log", "logs"))
+    end
+    
+    for _, searchName in pairs(searchNames) do
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj.Name == searchName and (obj:IsA("Part") or obj:IsA("Model")) then
+                referenceItem = obj
+                break
+            end
         end
+        if referenceItem then break end
     end
     
     if not referenceItem then
         print("No reference " .. itemName .. " found in workspace!")
+        print("Searched for: " .. table.concat(searchNames, ", "))
         return
     end
     
@@ -881,14 +911,14 @@ local function createHub()
         return
     end
 
-    local windowTitle = currentGame == "MM2" and "Samurai Hub - MM2" or "Samurai Hub - 99 Nights"
+    local windowTitle = currentGame == "MM2" and "Lost Hub - MM2" or "Lost Hub - 99 Nights"
     local windowAuthor = currentGame == "MM2" and "MM2 Exclusive Edition" or "99 Nights Edition"
 
     Window = WindUI:CreateWindow({
         Title = windowTitle,
-        Icon = "rbxassetid://99224451763710",
+        Icon = "rbxassetid://122913243559549",
         Author = windowAuthor,
-        Folder = "SamuraiHub",
+        Folder = "LostHub",
         Size = isMobile and UDim2.fromOffset(500, 400) or UDim2.fromOffset(580, 325),
         Transparent = true,
         Theme = "Dark",
@@ -909,31 +939,25 @@ local function createHub()
         tabs.RandomTab = Window:Tab({Title = "Random", Icon = "settings"})
         tabs.AutoGrindTab = Window:Tab({Title = "Auto Grind", Icon = "circle-play"})
         
-        -- Credits Tab - Updated with contributors
+        -- Credits Tab - Updated with new structure
         tabs.CreditsTab:Section({Title = "Team Credits"})
         tabs.CreditsTab:Paragraph({
-            Title = "Owner",
+            Title = "Script Developers",
             Desc = "• Revborn"
         })
         tabs.CreditsTab:Paragraph({
-            Title = "Co-Owners",
-            Desc = "• Kandeziareborn\n• Devy"
-        })
-        tabs.CreditsTab:Paragraph({
-            Title = "Contributors",
+            Title = "Script Contributors",
             Desc = "• None"
         })
         tabs.CreditsTab:Paragraph({
-            Title = "Lead Tester",
-            Desc = "• Akira"
-        })
-        tabs.CreditsTab:Paragraph({
             Title = "Testers",
-            Desc = "• guyonphilippines"
+            Desc = "• None"
         })
+        
+        tabs.CreditsTab:Section({Title = "More Details"})
         tabs.CreditsTab:Paragraph({
-            Title = "YouTubers",
-            Desc = "• Flaxan\n• Mark"
+            Title = "Script Developers",
+            Desc = "Made the script"
         })
 
         -- ESP Tab (UNCHANGED - DO NOT MODIFY)
@@ -952,11 +976,11 @@ local function createHub()
                         if not hrp then return end
                         
                         for _, v in pairs(char:GetChildren()) do
-                            if v.Name == "SamuraiESP" then v:Destroy() end
+                            if v.Name == "LostESP" then v:Destroy() end
                         end
                         
                         local billboard = Instance.new("BillboardGui")
-                        billboard.Name = "SamuraiESP"
+                        billboard.Name = "LostESP"
                         billboard.Parent = hrp
                         billboard.Size = UDim2.new(0, 200, 0, 100)
                         billboard.StudsOffset = Vector3.new(0, 3, 0)
@@ -984,7 +1008,7 @@ local function createHub()
                         roleLabel.TextScaled = true
                         
                         local highlight = Instance.new("Highlight")
-                        highlight.Name = "SamuraiESP"
+                        highlight.Name = "LostESP"
                         highlight.Parent = char
                         highlight.FillTransparency = 0.7
                         highlight.OutlineTransparency = 0
@@ -1028,7 +1052,7 @@ local function createHub()
                 
                 local function createGunESP()
                     for _, obj in pairs(workspace:GetDescendants()) do
-                        if obj.Name == "SamuraiGunESP" then
+                        if obj.Name == "LostGunESP" then
                             obj:Destroy()
                         end
                     end
@@ -1037,7 +1061,7 @@ local function createHub()
                     
                     for _, gunData in pairs(guns) do
                         local billboard = Instance.new("BillboardGui")
-                        billboard.Name = "SamuraiGunESP"
+                        billboard.Name = "LostGunESP"
                         billboard.Parent = gunData.handle
                         billboard.Size = UDim2.new(0, 100, 0, 50)
                         billboard.StudsOffset = Vector3.new(0, 3, 0)
@@ -1055,7 +1079,7 @@ local function createHub()
                         label.TextScaled = true
                         
                         local highlight = Instance.new("Highlight")
-                        highlight.Name = "SamuraiGunESP"
+                        highlight.Name = "LostGunESP"
                         highlight.Parent = gunData.tool
                         highlight.FillColor = Color3.fromRGB(255, 215, 0)
                         highlight.FillTransparency = 0.5
@@ -1433,39 +1457,33 @@ local function createHub()
         })
         
     elseif currentGame == "99NIGHTS" then
-        -- 99 Nights Tabs (ENHANCED WITH DYNAMIC DROPDOWNS)
+        -- 99 Nights Tabs (ENHANCED WITH DYNAMIC DROPDOWNS AND EXTREME HITBOX RANGE)
         tabs.CreditsTab = Window:Tab({Title = "Credits", Icon = "info"})
         tabs.CreaturesTab = Window:Tab({Title = "Creatures", Icon = "zap"})
         tabs.WorldTab = Window:Tab({Title = "World Features", Icon = "globe"})
         
-        -- 99 Nights Credits Tab
+        -- 99 Nights Credits Tab - Updated structure
         tabs.CreditsTab:Section({Title = "Team Credits"})
         tabs.CreditsTab:Paragraph({
-            Title = "Owner",
+            Title = "Script Developers",
             Desc = "• Revborn"
         })
         tabs.CreditsTab:Paragraph({
-            Title = "Co-Owners",
-            Desc = "• Kandeziareborn\n• Devy"
-        })
-        tabs.CreditsTab:Paragraph({
-            Title = "Contributors",
+            Title = "Script Contributors",
             Desc = "• None"
         })
         tabs.CreditsTab:Paragraph({
-            Title = "Lead Tester",
-            Desc = "• Akira"
-        })
-        tabs.CreditsTab:Paragraph({
             Title = "Testers",
-            Desc = "• guyonphilippines"
-        })
-        tabs.CreditsTab:Paragraph({
-            Title = "YouTubers",
-            Desc = "• Flaxan\n• Mark"
+            Desc = "• None"
         })
         
-        -- Enhanced Creatures Tab with DYNAMIC DROPDOWNS
+        tabs.CreditsTab:Section({Title = "More Details"})
+        tabs.CreditsTab:Paragraph({
+            Title = "Script Developers",
+            Desc = "Made the script"
+        })
+        
+        -- Enhanced Creatures Tab with DYNAMIC DROPDOWNS AND EXTREME HITBOX RANGE
         tabs.CreaturesTab:Section({Title = "Dynamic Creature System"})
         
         local creatureDropdown = tabs.CreaturesTab:Dropdown({
@@ -1490,13 +1508,13 @@ local function createHub()
             end
         end)
         
-        -- Working hitbox slider
+        -- Enhanced hitbox slider with extreme range 1-10000
         tabs.CreaturesTab:Slider({
             Title = "Hitbox Size",
             Step = 1,
             Value = {
-                Min = 10,
-                Max = 200,
+                Min = 1,
+                Max = 10000,
                 Default = 70,
             },
             Callback = function(value)
@@ -1506,8 +1524,8 @@ local function createHub()
         })
         
         tabs.CreaturesTab:Button({
-            Title = "Show Hitbox Visualization",
-            Desc = "Display visual hitbox for selected creature",
+            Title = "Show Visible Hitbox",
+            Desc = "Display clear red box around selected creature",
             Callback = function()
                 createHitboxVisualization(selectedCreature, hitboxSize)
             end
@@ -1552,11 +1570,13 @@ local function createHub()
             Title = "Hide Visualization",
             Desc = "Remove hitbox visualization",
             Callback = function()
-                if hitboxVisualization then
-                    hitboxVisualization:Destroy()
-                    hitboxVisualization = nil
-                    print("Hitbox visualization removed")
+                for _, visual in pairs(hitboxVisualization) do
+                    if visual and visual.Parent then
+                        visual:Destroy()
+                    end
                 end
+                hitboxVisualization = {}
+                print("All hitbox visualizations removed")
             end
         })
         
@@ -1623,7 +1643,7 @@ local function createHub()
             Desc = "Teleport all collectible items to player",
             Callback = function()
                 if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
-                    print("Character not found!")
+print("Character not found!")
                     return
                 end
                 
@@ -1633,7 +1653,7 @@ local function createHub()
                 for _, obj in pairs(workspace:GetDescendants()) do
                     if obj:IsA("Part") then
                         local name = obj.Name:lower()
-                        if name:find("wood") or name:find("log") or name:find("item") or 
+                        if name:find("wood") or name:find("log") or name:find("logs") or name:find("item") or 
                            name:find("coin") or name:find("gem") or name:find("crystal") or
                            name:find("berry") or name:find("meat") or name:find("bone") then
                             obj.Position = playerPos + Vector3.new(0, collected * 0.5, 0)
@@ -1671,13 +1691,13 @@ local function createHub()
         })
     end
 
-    print("Samurai Hub " .. currentGame .. " Edition loaded successfully!")
+    print("Lost Hub " .. currentGame .. " Edition loaded successfully!")
 end
 
--- Enhanced Toggle Button (UNCHANGED)
+-- Enhanced Toggle Button
 local function createToggleButton()
     local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "SamuraiToggle"
+    screenGui.Name = "LostToggle"
     screenGui.Parent = game.CoreGui
     screenGui.ResetOnSpawn = false
 
@@ -1686,7 +1706,7 @@ local function createToggleButton()
     button.Position = UDim2.new(0, 50, 0, 50)
     button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     button.BackgroundTransparency = 0.2
-    button.Image = "rbxassetid://99224451763710"
+    button.Image = "rbxassetid://122913243559549"
     button.Parent = screenGui
     
     local corner = Instance.new("UICorner")
@@ -1743,7 +1763,7 @@ local function createToggleButton()
     end)
 end
 
--- Key System (UNCHANGED)
+-- Key System
 if isKeySaved() then
     print("Key already saved, loading hub...")
     createHub()
@@ -1755,7 +1775,7 @@ else
     print("Creating key system...")
     
     local keyGui = Instance.new("ScreenGui")
-    keyGui.Name = "SamuraiKeySystem"
+    keyGui.Name = "LostKeySystem"
     keyGui.Parent = player.PlayerGui
     keyGui.ResetOnSpawn = false
     
@@ -1792,7 +1812,7 @@ else
     title.Size = UDim2.new(0, frameSize.X.Offset - 70, 0, 50)
     title.Position = UDim2.new(0, 35, 0, 25)
     title.BackgroundTransparency = 1
-    title.Text = "Samurai Hub"
+    title.Text = "Lost Hub"
     title.TextColor3 = Color3.new(1, 1, 1)
     title.TextSize = isMobile and 28 or 32
     title.Font = Enum.Font.GothamBold
@@ -1952,12 +1972,12 @@ else
     print("Key system created successfully!")
 end
 
-print("Samurai Hub initialized successfully!")
+print("Lost Hub initialized successfully!")
 print("Current Game: " .. currentGame)
 print("Required Key: " .. REQUIRED_KEY)
 print("Discord: discord.gg/qbBww8Xm")
 
--- Auto-cleanup on character respawn (UNCHANGED)
+-- Auto-cleanup on character respawn
 player.CharacterAdded:Connect(function()
     task.wait(1)
     if isCollecting then
@@ -1972,6 +1992,6 @@ print("All systems loaded and ready!")
 if currentGame == "MM2" then
     print("MM2 features available: ESP, Auto-Kill, Gun Teleport, Collection, Sheriff Aimbot, Random Features")
 elseif currentGame == "99NIGHTS" then
-    print("99 Nights features available: Dynamic Hitbox System, Real-time Item Spawning, Auto-updating Dropdowns")
+    print("99 Nights features available: Dynamic Hitbox System (1-10000 range), Real-time Item Spawning, Auto-updating Dropdowns, Enhanced Log/Logs Support")
 end
-print("Samurai Hub Complete Edition - Enhanced with dynamic dropdowns and real-time workspace scanning!")
+print("Lost Hub Complete Edition - Enhanced with visible hitboxes, extreme range, and improved log support!")
